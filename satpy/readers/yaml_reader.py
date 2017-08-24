@@ -381,15 +381,19 @@ class FileYAMLReader(AbstractYAMLReader):
                  start_time=None,
                  end_time=None,
                  area=None,
-                 filter_filenames=True, **kwargs):
+                 filter_filenames=True,
+                 metadata=None,
+                 **kwargs):
         super(FileYAMLReader, self).__init__(config_files,
                                              start_time=start_time,
                                              end_time=end_time,
                                              area=area)
 
         self.file_handlers = {}
-        self.filter_filenames = self.info.get(
-            'filter_filenames', filter_filenames)
+        self.filter_filenames = self.info.get('filter_filenames',
+                                              filter_filenames)
+        self.reader_kwargs = kwargs
+        self.metadata = metadata
 
     @property
     def available_dataset_ids(self):
@@ -516,20 +520,23 @@ class FileYAMLReader(AbstractYAMLReader):
     def filter_filenames_by_info(self, filename_items):
         """Filter out file using metadata from the filenames.
 
-        Currently only uses start and end time.
+        Currently only uses start and end time. If only start time is available
+        from the filename, keep all the filename that have a start time before
+        the requested end time.
         """
         for filename, filename_info in filename_items:
-            s = filename_info.get('start_time')
-            e = filename_info.get('end_time', s)
-            if e and not s:
-                s = e
-
-            if e < s:
+            fstart = filename_info.get('start_time')
+            fend = filename_info.get('end_time')
+            if fend and not fstart:
+                fstart = fend
+            if fend and fend < fstart:
                 # correct for filenames with 1 date and 2 times
-                e = e.replace(year=s.year, month=s.month, day=s.day)
-            if self._start_time and e < self._start_time:
+                fend = fend.replace(year=fstart.year,
+                                    month=fstart.month,
+                                    day=fstart.day)
+            if self._start_time and fend and fend < self._start_time:
                 continue
-            if self._end_time and s > self._end_time:
+            if self._end_time and fstart > self._end_time:
                 continue
             yield filename, filename_info
 
@@ -539,6 +546,28 @@ class FileYAMLReader(AbstractYAMLReader):
             if self.check_file_covers_area(filehandler):
                 yield filehandler
 
+    def filter_fh_by_metadata(self, filehandlers):
+        """Filter out filehandlers using provide metadata."""
+
+        for filehandler in filehandlers:
+            if self.metadata is None:
+                yield filehandler
+                continue
+            for key, val in self.metadata.items():
+                if (key in filehandler.metadata and
+                        val != filehandler.metadata[key]):
+                    break
+            else:
+                yield filehandler
+
+    @staticmethod
+    def apply_filters(iterator, *filters):
+        """Apply filters on an iterator."""
+        result = iterator
+        for filt in filters:
+            result = filt(result)
+        return result
+
     def new_filehandlers_for_filetype(self, filetype_info, filenames):
         """Create filehandlers for a given filetype."""
         filename_iter = self.filename_items_for_filetype(filenames,
@@ -547,9 +576,11 @@ class FileYAMLReader(AbstractYAMLReader):
             filename_iter = self.filter_filenames_by_info(filename_iter)
         filehandler_iter = self.new_filehandler_instances(filetype_info,
                                                           filename_iter)
-        return [fhd
-                for fhd in self.filter_fh_by_area(self.filter_fh_by_time(
-                    filehandler_iter))]
+        filtered_iter = self.apply_filters(filehandler_iter,
+                                           self.filter_fh_by_metadata,
+                                           self.filter_fh_by_time,
+                                           self.filter_fh_by_area)
+        return list(filtered_iter)
 
     def create_filehandlers(self, filenames):
         """Organize the filenames into file types and create file handlers."""
