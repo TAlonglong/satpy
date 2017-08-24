@@ -65,6 +65,7 @@ class CompositorLoader(object):
 
     def load_sensor_composites(self, sensor_name):
         """Load all compositor configs for the provided sensor."""
+        sensor_name = sensor_name.replace("/","-")
         config_filename = sensor_name + ".yaml"
         LOG.debug("Looking for composites config file %s", config_filename)
         composite_configs = config_search_paths(
