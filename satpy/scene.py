@@ -112,6 +112,8 @@ class Scene(InfoObject):
         mda['sensor'] = self._get_sensor_names()
 
         # overwrite the request start/end times with actual loaded data limits
+        import pdb
+        pdb.set_trace()
         if self.readers:
             mda['start_time'] = min(x.start_time
                                     for x in self.readers.values())
@@ -395,11 +397,14 @@ class Scene(InfoObject):
                              areas which would require resampling first.
 
         """
+        print "comp_node: ", comp_node
         if comp_node.name in self.datasets:
             # already loaded
             return
         compositor, prereqs, optional_prereqs = comp_node.data
-
+        print "compositor: ",compositor
+        print "prereqs: ", prereqs
+        print "optional_prereqs: ", optional_prereqs
         try:
             prereq_datasets = self._get_prereq_datasets(
                 comp_node.name,
@@ -437,6 +442,10 @@ class Scene(InfoObject):
             # even though it wasn't generated keep a list of what
             # might be needed in other compositors
             keepables.add(comp_node.name)
+            print "preservable_datasets: ", preservable_datasets
+            print "prereq_ids: ", prereq_ids
+            print "opt_prereq_ids: ", opt_prereq_ids
+            print "keepables: ", keepables
             return
 
     def read_composites(self, compositor_nodes):
@@ -476,8 +485,11 @@ class Scene(InfoObject):
         keepables = keepables or set()
         # remove reader datasets that couldn't be loaded so they aren't
         # attempted again later
+        print "_remove_failed_datasets ... "
         for n in self.missing_datasets:
+            print "missing_dataset for loop: ", n
             if n not in keepables:
+                print "Wishlist discard n: ", n
                 self.wishlist.discard(n)
 
     def unload(self, keepables=None):
@@ -524,11 +536,15 @@ class Scene(InfoObject):
         keepables = None
         if compute:
             keepables = self.compute()
+        print "self.missing_datasets: ", self.missing_datasets
         if self.missing_datasets:
+            print "Inside self.missing_datasets: ", self.missing_datasets
             # copy the set of missing datasets because they won't be valid
             # after they are removed in the next line
             missing = self.missing_datasets.copy()
+            print "BEfore remove"
             self._remove_failed_datasets(keepables)
+            print "After remove"
             missing_str = ", ".join(str(x) for x in missing)
             LOG.warning(
                 "The following datasets were not created: {}".format(missing_str))
@@ -567,7 +583,9 @@ class Scene(InfoObject):
             nodes = [self.dep_tree[i]
                      for i in new_scn.wishlist if not self.dep_tree[i].is_leaf]
             keepables = new_scn.compute(nodes=nodes)
+        print "new_scn.missing_datasets: ", new_scn.missing_datasets
         if new_scn.missing_datasets:
+            print "Inside new_scn.missing_datasets: ", new_scn.missing_datasets
             # copy the set of missing datasets because they won't be valid
             # after they are removed in the next line
             missing = new_scn.missing_datasets.copy()
@@ -644,6 +662,6 @@ class Scene(InfoObject):
         return self.load_writer_config(**kwargs)
 
     def get_writer_by_ext(self, extension, **kwargs):
-        mapping = {".tiff": "geotiff", ".tif": "geotiff", ".nc": "cf"}
+        mapping = {".tiff": "geotiff", ".tif": "geotiff", ".nc": "cf", ".mitiff": "mitiff"}
         return self.get_writer(
             mapping.get(extension.lower(), "simple_image"), **kwargs)

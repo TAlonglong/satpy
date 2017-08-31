@@ -1,1 +1,10 @@
 sensor_name: visir/avhrr-3
+
+composites:
+  overview:
+    compositor: !!python/name:satpy.composites.RGBCompositor
+    prerequisites:
+    - '1'
+    - '2'
+    - '4'
+    standard_name: overview
