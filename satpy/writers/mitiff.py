@@ -79,15 +79,28 @@ class MITIFFWriter(ImageWriter):
         """
         LOG.debug("Starting in save_datasetsssssssssssssssss ... ")
         LOG.debug("kwargs: {}".format(kwargs))
-        self._load_mitiff_config(os.path.join(self.ppp_config_dir,"mitiff-config.yaml"))
-        if kwargs['sensor'] not in self.config:
-            LOG.error("Sensor {} not defined in config. Go fix your config!".format(kwargs['sensor']))
-            return False
-        image_description = self._make_image_description(datasets, **kwargs)
-        gen_filename = self._generate_filename(datasets, **kwargs)
-        self._save_datasets_as_mitiff(datasets, image_description, gen_filename, **kwargs)
-        
-        return True
+        try:
+            self._load_mitiff_config(os.path.join(self.ppp_config_dir,"mitiff-config.yaml"))
+
+            if type(kwargs["sensor"]) not in (tuple, list, set):
+                kwargs['sensor'] = kwargs['sensor'].replace("/","-")
+                if kwargs['sensor'] not in self.config:
+                    LOG.error("Sensor {} not defined in config. Go fix your config!".format(kwargs['sensor']))
+                    return False
+            else:
+                for i,sensor in enumerate(kwargs["sensor"]):
+                    kwargs["sensor"][i] = sensor.replace("/","-")
+                    if sensor not in self.config:
+                        LOG.error("Sensor {} not defined in config. Go fix your config!".format(sensor))
+                        return False
+
+            image_description = self._make_image_description(datasets, **kwargs)
+            gen_filename = self._generate_filename(datasets, **kwargs)
+            self._save_datasets_as_mitiff(datasets, image_description, gen_filename, **kwargs)
+        except:
+            raise
+
+        return gen_filename
 
 #    def save_dataset(self, dataset, filename=None, fill_value=None, overlay=None, **kwargs):
 #        """Saves the *dataset* to a given *filename*.
@@ -164,6 +177,7 @@ class MITIFFWriter(ImageWriter):
             _platform_name = translate_platform_name.get(kwargs['platform_name'],kwargs['platform_name'])
 
         _image_description = ''
+        _image_description.encode('utf-8')
 
         _image_description += ' Satellite: '
         if ( _platform_name != None ):
@@ -188,12 +202,16 @@ class MITIFFWriter(ImageWriter):
         _image_description += ' SatDir: 0\n'
     
         _image_description += ' Channels: '
-        _image_description += str(len(self.config[kwargs['sensor']][0]['channels']))
+        if type(kwargs["sensor"]) not in (tuple, list, set):
+            kwargs["sensor"] = [kwargs["sensor"]]
+
+        _image_description += str(len(self.config[kwargs['sensor'][0]][0]['channels']))
+
         _image_description += ' In this file: '
-        tcn = translate_channel_name.get(kwargs['sensor'])
+        tcn = translate_channel_name.get(kwargs['sensor'][0])
 
         #for dataset in datasets:
-        for ch in self.config[kwargs['sensor']][0]['channels']:
+        for ch in self.config[kwargs['sensor'][0]][0]['channels']:
             print ch['name']
             try:
                 _image_description += ch['alias']
@@ -245,7 +263,7 @@ class MITIFFWriter(ImageWriter):
     
         LOG.debug("Area extent: {}".format(datasets[0].info['area'].area_extent))
 
-        for ch in self.config[kwargs['sensor']][0]['channels']:
+        for ch in self.config[kwargs['sensor'][0]][0]['channels']:
             found_channel = False
             print ch['name']
             for dataset in datasets:
@@ -277,7 +295,8 @@ class MITIFFWriter(ImageWriter):
                     #_decimals = 8
                 elif ch['calibration'] == 'brightness_temperature':
                     _image_description += ', BT, '
-                    _image_description += '[°C]'
+                    #_image_description += u'[\u2103]'
+                    _image_description += u'[C]'
 
                     _reverse_offset = 255.;
                     _reverse_scale = -1.;
@@ -308,13 +327,28 @@ class MITIFFWriter(ImageWriter):
            I think this need a config input like a trollsift config or something
         """
         from trollsift.parser import compose
+        filename = None
+        if type(kwargs["sensor"]) not in (tuple, list, set):
+            kwargs["sensor"] = [kwargs["sensor"]]
 
-        return compose(self.config[kwargs['sensor']][0]['file-name'],datasets[0].info)
+        _info = datasets[0].info
+        _info.update({'area_id':datasets[0].info['area'].area_id})
+        try:
+            #filename = os.path.join(kwargs['output_dir'], compose(self.config[kwargs['sensor'][0]][0]['file-name'],datasets[0].info))
+            filename = os.path.join(kwargs['output_dir'], compose(self.config[kwargs['sensor'][0]][0]['file-name'],_info))
+        except:
+            LOG.error("Failed to compose filename for sensor: {} with config: {} and output_dir: {}".format(kwargs['sensor'][0],self.config[kwargs['sensor'][0]][0]['file-name'], kwargs['output_dir']))
+            raise
+
+        return filename
 
     def _save_datasets_as_mitiff(self, datasets, image_description, gen_filename, **kwargs):
         """Put all togehter and save as a tiff file with the special tag making it a 
            mitiff file.
         """
+
+        if type(kwargs["sensor"]) not in (tuple, list, set):
+            kwargs["sensor"] = [kwargs["sensor"]]
 
         from libtiff import TIFF
 
@@ -322,7 +356,7 @@ class MITIFFWriter(ImageWriter):
         
         tif.SetField(IMAGEDESCRIPTION, str(image_description))
         
-        for ch in self.config[kwargs['sensor']][0]['channels']:
+        for ch in self.config[kwargs['sensor'][0]][0]['channels']:
             found_channel = False
             print ch['name']
             for dataset in datasets:
@@ -346,7 +380,7 @@ class MITIFFWriter(ImageWriter):
 
                     data[_mask] = 0
 
-                    tif.write_image(data.astype(np.uint8),)
+                    tif.write_image(data.astype(np.uint8), compression='deflate')
                     found_channel = True
                     break
 
@@ -366,7 +400,7 @@ class MITIFFWriter(ImageWriter):
 
     def _find_config(self, dataset, **kwargs):
 
-        for config_ch in self.config[kwargs['sensor']]:
+        for config_ch in self.config[kwargs['sensor'][0]]:
             if config_ch['type'] == 'metno-diana':
                 for ch in config_ch['channels']:
                     if ch['name'] == dataset.info['name']:

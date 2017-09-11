@@ -526,7 +526,7 @@ class FileYAMLReader(AbstractYAMLReader):
         """
         for filename, filename_info in filename_items:
             fstart = filename_info.get('start_time')
-            fend = filename_info.get('end_time')
+            fend = filename_info.get('end_time',fstart)
             if fend and not fstart:
                 fstart = fend
             if fend and fend < fstart:

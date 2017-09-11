@@ -112,8 +112,6 @@ class Scene(InfoObject):
         mda['sensor'] = self._get_sensor_names()
 
         # overwrite the request start/end times with actual loaded data limits
-        import pdb
-        pdb.set_trace()
         if self.readers:
             mda['start_time'] = min(x.start_time
                                     for x in self.readers.values())
@@ -652,7 +650,7 @@ class Scene(InfoObject):
         else:
             datasets = self.datasets.values()
         writer = self.get_writer(writer, **kwargs)
-        writer.save_datasets(datasets, **kwargs)
+        return writer.save_datasets(datasets, **kwargs)
 
     def get_writer(self, writer="geotiff", **kwargs):
         config_fn = writer + ".cfg" if "." not in writer else writer

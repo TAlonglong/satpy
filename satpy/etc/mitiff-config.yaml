@@ -1,0 +1,35 @@
+avhrr-3:
+  - type: metno-diana
+    file-name: 'avhrr-{area_id}-{start_time:%Y%m%d%H%M%S}.mitiff'
+    nprocs: 8
+    cache_dir: /data/pytroll/cache-dir
+    'channels':
+      - {'name':'1', 'alias':'1', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+      - {'name':'2', 'alias':'2', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+      - {'name':'3b', 'alias':'3', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'4', 'alias':'4', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'5', 'alias':'5', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'3a', 'alias':'6', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+
+  - 'type': 'test'
+abi:
+  - type: metno-diana
+    file-name: 'goes16-{area_id}-{start_time:%Y%m%d%H%M%S}.mitiff'
+    nprocs: 8
+    cache_dir: /data/pytroll/cache-dir
+    'channels':
+      - {'name':'C02', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+      - {'name':'C03', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+      - {'name':'C04', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+      - {'name':'C05', 'calibration':'reflectance', 'min-val':'0', 'max-val':'100'}
+      - {'name':'C06', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C07', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C08', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C09', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C10', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C11', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C12', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C13', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C14', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C15', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
+      - {'name':'C16', 'calibration':'brightness_temperature', 'min-val':'-150', 'max-val':'50'}
