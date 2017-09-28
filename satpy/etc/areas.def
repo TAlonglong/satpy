@@ -790,9 +790,9 @@ REGION: northamerica {
 
 # North America:
 REGION: northamerica2 {
-	NAME:		North America2 - Global 1km USGS Landuse database
+	NAME:		North America2 - Global 2km USGS Landuse database
 	PCS_ID:		laeaw100n50
-	PCS_DEF:	proj=laea,a=6370997.0,lat_0=40.0,lon_0=-100.0
+	PCS_DEF:	proj=laea,ellps=WGS84,lat_0=40.0,lon_0=-100.0
 	XSIZE:		4612
 	YSIZE:		4498
 	AREA_EXTENT:	(-4487000, -4515000, 4735000, 4480000)
