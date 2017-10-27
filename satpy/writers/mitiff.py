@@ -45,10 +45,10 @@ class MITIFFWriter(ImageWriter):
 
     def __init__(self, floating_point=False, tags=None, **kwargs):
         ImageWriter.__init__(self,
-                             default_config_filename="writers/mitiff.cfg",
+                             default_config_filename="writers/mitiff.yaml",
                              **kwargs)
 
-        self.tags = self.config_options.get("tags",
+        self.tags = self.info.get("tags",
                                             None) if tags is None else tags
         if self.tags is None:
             self.tags = {}
@@ -80,22 +80,27 @@ class MITIFFWriter(ImageWriter):
         LOG.debug("Starting in save_datasetsssssssssssssssss ... ")
         LOG.debug("kwargs: {}".format(kwargs))
         try:
-            self._load_mitiff_config(os.path.join(self.ppp_config_dir,"mitiff-config.yaml"))
+            #self._load_mitiff_config(os.path.join(self.ppp_config_dir,"mitiff-config.yaml"))
 
             if type(kwargs["sensor"]) not in (tuple, list, set):
                 kwargs['sensor'] = kwargs['sensor'].replace("/","-")
-                if kwargs['sensor'] not in self.config:
-                    LOG.error("Sensor {} not defined in config. Go fix your config!".format(kwargs['sensor']))
-                    return False
+                #if kwargs['sensor'] not in self.config:
+                #    LOG.error("Sensor {} not defined in config. Go fix your config!".format(kwargs['sensor']))
+                #    return False
             else:
                 for i,sensor in enumerate(kwargs["sensor"]):
                     kwargs["sensor"][i] = sensor.replace("/","-")
-                    if sensor not in self.config:
-                        LOG.error("Sensor {} not defined in config. Go fix your config!".format(sensor))
-                        return False
+                    #if sensor not in self.config:
+                    #    LOG.error("Sensor {} not defined in config. Go fix your config!".format(sensor))
+                    #    return False
 
             image_description = self._make_image_description(datasets, **kwargs)
-            gen_filename = self._generate_filename(datasets, **kwargs)
+            print "File pattern {}".format(self.file_pattern)
+            kwargs['name']  ="shallalal"
+            kwargs['start_time'] = datasets[0].info['start_time']
+            print kwargs
+            print self.get_filename(**kwargs)
+            gen_filename = self.get_filename(**kwargs)#self._generate_filename(datasets, **kwargs)
             self._save_datasets_as_mitiff(datasets, image_description, gen_filename, **kwargs)
         except:
             raise
@@ -205,18 +210,20 @@ class MITIFFWriter(ImageWriter):
         if type(kwargs["sensor"]) not in (tuple, list, set):
             kwargs["sensor"] = [kwargs["sensor"]]
 
-        _image_description += str(len(self.config[kwargs['sensor'][0]][0]['channels']))
+        print "datasets in make_image_desc: {}".format(datasets)
+
+        _image_description += str(len(datasets[0].info['prerequisites']))
 
         _image_description += ' In this file: '
-        tcn = translate_channel_name.get(kwargs['sensor'][0])
+        #tcn = translate_channel_name.get(kwargs['sensor'][0])
 
         #for dataset in datasets:
-        for ch in self.config[kwargs['sensor'][0]][0]['channels']:
-            print ch['name']
+        for ch in datasets[0].info['prerequisites']:
+            print ch
             try:
-                _image_description += ch['alias']
+                _image_description += datasets[0].info['metadata_requirements'][ch]['alias']
             except KeyError:
-                _image_description += ch['name']
+                _image_description += ch
 
             _image_description += ' '
         
@@ -263,15 +270,9 @@ class MITIFFWriter(ImageWriter):
     
         LOG.debug("Area extent: {}".format(datasets[0].info['area'].area_extent))
 
-        for ch in self.config[kwargs['sensor'][0]][0]['channels']:
+        for ch in datasets[0].info['prerequisites']:
             found_channel = False
-            print ch['name']
-            for dataset in datasets:
-                if ch['name'] == dataset.info['name']:
-                    found_channel = True
-                    break
-            if not found_channel:
-                LOG.warning("Could not find mitiff dataset for this config {}. This is not want you want.".format(ch['name']))
+            print ch
                     
             palette=False
             #Make calibration.
@@ -280,20 +281,20 @@ class MITIFFWriter(ImageWriter):
             else:
                 _image_description += 'Table_calibration: '
                 try:
-                    _image_description += ch['alias']
+                    _image_description += datasets[0].info['metadata_requirements'][ch]['alias']
                 except KeyError:
-                    _image_description += ch['name']
+                    _image_description += ch
 
                 _reverse_offset = 0.;
                 _reverse_scale = 1.;
 
                 #FIXME need to correlate the configured calibration and the calibration for the dataset.
-                if ch['calibration'] == 'RADIANCE':
+                if datasets[0].info['metadata_requirements'][ch]['calibration'] == 'RADIANCE':
                     raise NotImplementedError("Mitiff radiance calibration not implemented.")
                     #_image_description += ', Radiance, '
                     #_image_description += '[W/m²/µm/sr]'
                     #_decimals = 8
-                elif ch['calibration'] == 'brightness_temperature':
+                elif datasets[0].info['metadata_requirements'][ch]['calibration'] == 'brightness_temperature':
                     _image_description += ', BT, '
                     #_image_description += u'[\u2103]'
                     _image_description += u'[C]'
@@ -301,7 +302,7 @@ class MITIFFWriter(ImageWriter):
                     _reverse_offset = 255.;
                     _reverse_scale = -1.;
                     _decimals = 2
-                elif ch['calibration'] == 'reflectance':
+                elif datasets[0].info['metadata_requirements'][ch]['calibration'] == 'reflectance':
                     _image_description += ', Reflectance(Albedo), '
                     _image_description += '[%]'
                     _decimals = 2
@@ -316,7 +317,7 @@ class MITIFFWriter(ImageWriter):
                 for val in range(0,256):
                     #Comma separated list of values
                     #calib.append(boost::str(boost::format("%.8f ") % (prod_chan_it->min_val + (val * (prod_chan_it->max_val - prod_chan_it->min_val)) / 255.)));
-                    _image_description += '{0:.{1}f} '.format((float(ch['min-val']) + ( (_reverse_offset + _reverse_scale*val) * ( float(ch['max-val']) - float(ch['min-val'])))/255.),_decimals)
+                    _image_description += '{0:.{1}f} '.format((float(datasets[0].info['metadata_requirements'][ch]['min-val']) + ( (_reverse_offset + _reverse_scale*val) * ( float(datasets[0].info['metadata_requirements'][ch]['max-val']) - float(datasets[0].info['metadata_requirements'][ch]['min-val'])))/255.),_decimals)
                 
                 _image_description += ']\n\n'
                     
@@ -356,33 +357,36 @@ class MITIFFWriter(ImageWriter):
         
         tif.SetField(IMAGEDESCRIPTION, str(image_description))
         
-        for ch in self.config[kwargs['sensor'][0]][0]['channels']:
+        #for ch in self.config[kwargs['sensor'][0]][0]['channels']:
+        for i,ch in enumerate(datasets[0].info['prerequisites']):
             found_channel = False
-            print ch['name']
-            for dataset in datasets:
-                if ch['name'] == dataset.info['name']:
-                    #Need to scale the data set to mitiff 0-255. 0 is no/missing/bad data.
-                    LOG.debug("min %f max %f value" % (float(ch['min-val']),float(ch['max-val'])))
-                    reverse_offset = 0.
-                    reverse_scale = 1.
-                    if ch['calibration'] == "brightness_temperature":
-                        reverse_offset = 255.
-                        reverse_scale = -1.
-                        dataset.data[:] += KELVIN_TO_CELSIUS
-                        #print channels.data
-                    
-                    LOG.debug("Reverse offset: %f reverse scale: %f" % ( reverse_offset,reverse_scale))
+            print ch
+            #for dataset in datasets:
+            #if ch['name'] == dataset.info['name']:
+            #datasets[0].info['metadata_requirements'][ch]['alias']
+            #Need to scale the data set to mitiff 0-255. 0 is no/missing/bad data.
+            LOG.debug("min %f max %f value" % (float(datasets[0].info['metadata_requirements'][ch]['min-val']),float(datasets[0].info['metadata_requirements'][ch]['max-val'])))
+            reverse_offset = 0.
+            reverse_scale = 1.
+            if datasets[0].info['metadata_requirements'][ch]['calibration'] == 'brightness_temperature':
+            #if ch['calibration'] == "brightness_temperature":
+                reverse_offset = 255.
+                reverse_scale = -1.
+                datasets[0].data[i] += KELVIN_TO_CELSIUS
+                #print "after: ",datasets[0].data[i]
+                
+            LOG.debug("Reverse offset: %f reverse scale: %f" % ( reverse_offset,reverse_scale))
 
-                    _mask = dataset.mask
-                    _data = np.clip(dataset.data, float(ch['min-val']),float(ch['max-val']))
+            _mask = datasets[0].mask[i]
+            _data = np.clip(datasets[0].data[i], float(datasets[0].info['metadata_requirements'][ch]['min-val']),float(datasets[0].info['metadata_requirements'][ch]['max-val']))
 
-                    data=reverse_offset + reverse_scale*(((_data-float(ch['min-val']))/(float(ch['max-val']) - float(ch['min-val'])))*255.)
+            data=reverse_offset + reverse_scale*(((_data-float(datasets[0].info['metadata_requirements'][ch]['min-val']))/(float(datasets[0].info['metadata_requirements'][ch]['max-val']) - float(datasets[0].info['metadata_requirements'][ch]['min-val'])))*255.)
 
-                    data[_mask] = 0
+            data[_mask] = 0
 
-                    tif.write_image(data.astype(np.uint8), compression='deflate')
-                    found_channel = True
-                    break
+            tif.write_image(data.astype(np.uint8), compression='deflate')
+            found_channel = True
+            #break
 
             if not found_channel:
                 LOG.debug("Could not find configured channel in read data set. Fill with empty.")
