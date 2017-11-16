@@ -518,6 +518,16 @@ class RGBCompositor(CompositeBase):
                              (len(projectables), ))
 
         try:
+            #first = True
+            #prev_area_extent = None
+            #for projectable in projectables:
+            #    print "projectable: {}".format(projectable.info['area'].area_extent)
+            #    if not first:
+            #        print "Compare area extent"
+            #        projectable.info['area'].area_extent = prev_area_extent
+            #    prev_area_extent = projectable.info['area'].area_extent
+            #    first = False
+
             the_data = np.rollaxis(
                 np.ma.dstack([projectable for projectable in projectables]),
                 axis=2)
@@ -831,10 +841,21 @@ class DatasetsCompositor(CompositeBase):
     def __call__(self, projectables, nonprojectables=None, **info):
 
         try:
+            #first = True
+            #prev_area_extent = None
+            #for projectable in projectables:
+            #    print "projectable: {}".format(projectable.info['area'].area_extent)
+            #    if not first:
+            #        print "Compare area extent"
+            #        projectable.info['area'].area_extent = prev_area_extent
+            #    prev_area_extent = projectable.info['area'].area_extent
+            #    first = False
+
             the_data = np.rollaxis(
                 np.ma.dstack([projectable for projectable in projectables]),
                 axis=2)
         except ValueError:
+            LOG.debug("Incompatibe Areas for datasets compositor")
             raise IncompatibleAreas
         else:
             areas = [projectable.info.get('area', None)

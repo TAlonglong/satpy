@@ -443,9 +443,13 @@ class Scene(InfoObject):
             # even though it wasn't generated keep a list of what
             # might be needed in other compositors
             keepables.add(comp_node.name)
+            print ""
             print "preservable_datasets: ", preservable_datasets
+            print ""
             print "prereq_ids: ", prereq_ids
+            print ""
             print "opt_prereq_ids: ", opt_prereq_ids
+            print ""
             print "keepables: ", keepables
             return
 

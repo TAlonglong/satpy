@@ -951,7 +951,8 @@ class HRITMSGFileHandler(HRITFileHandler):
 
         self.calibrate(out, key.calibration)
 
-        out.info['units'] = info['units']
+        #out.info['units'] = info['units']
+        out.info['units'] = info.get('units', '1')
         out.info['wavelength'] = info['wavelength']
         out.info['standard_name'] = info['standard_name']
         out.info['platform_name'] = self.platform_name

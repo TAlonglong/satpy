@@ -56,23 +56,9 @@ class MITIFFWriter(ImageWriter):
             # if it's coming from a config file
             self.tags = dict(tuple(x.split("=")) for x in self.tags.split(","))
 
+        LOG.debug("1self.config: {}".format(self.config))
         self.config = {}
-
-    def _load_mitiff_config(self, mitiff_config_file):
-        #Load a mitiff yaml config file
-        import yaml
-        with open(mitiff_config_file, 'r') as stream:
-            try:
-                self.config = yaml.load(stream)
-                import pprint
-                print type(self.config)
-                pp = pprint.PrettyPrinter(indent=4)
-                pp.pprint(self.config)
-            except yaml.YAMLError as exc:
-                print(exc)
-                raise
-                
-        #return config
+        LOG.debug("2self.config: {}".format(self.config))
 
     def save_datasets(self, datasets, **kwargs):
         """Save all datasets to one or more files.
@@ -80,8 +66,6 @@ class MITIFFWriter(ImageWriter):
         LOG.debug("Starting in save_datasetsssssssssssssssss ... ")
         LOG.debug("kwargs: {}".format(kwargs))
         try:
-            #self._load_mitiff_config(os.path.join(self.ppp_config_dir,"mitiff-config.yaml"))
-
             if type(kwargs["sensor"]) not in (tuple, list, set):
                 kwargs['sensor'] = kwargs['sensor'].replace("/","-")
                 #if kwargs['sensor'] not in self.config:
@@ -96,11 +80,11 @@ class MITIFFWriter(ImageWriter):
 
             image_description = self._make_image_description(datasets, **kwargs)
             print "File pattern {}".format(self.file_pattern)
-            kwargs['name']  ="shallalal"
+            #kwargs['name']  ="shallalal"
             kwargs['start_time'] = datasets[0].info['start_time']
             print kwargs
             print self.get_filename(**kwargs)
-            gen_filename = self.get_filename(**kwargs)#self._generate_filename(datasets, **kwargs)
+            gen_filename = self.get_filename(**kwargs)
             self._save_datasets_as_mitiff(datasets, image_description, gen_filename, **kwargs)
         except:
             raise
@@ -212,14 +196,29 @@ class MITIFFWriter(ImageWriter):
 
         print "datasets in make_image_desc: {}".format(datasets)
 
-        _image_description += str(len(datasets[0].info['prerequisites']))
+        if 'prerequisites' in datasets[0].info:
+            _image_description += str(len(datasets[0].info['prerequisites']))
+        else:
+            print "len datasets: {}".format(len(datasets))
+            _image_description += str(len(datasets))
 
         _image_description += ' In this file: '
         #tcn = translate_channel_name.get(kwargs['sensor'][0])
 
         #for dataset in datasets:
-        for ch in datasets[0].info['prerequisites']:
+        channels = []
+        if 'prerequisites' in datasets[0].info:
+            channels = datasets[0].info['prerequisites']
+        else:
+            print datasets[0].info['name']
+            for ch in xrange(len(datasets)):
+                channels.append(datasets[ch].info['name'])
+
+        #for ch in datasets[0].info['prerequisites']:
+        for ch in channels:
             print ch
+            print datasets[0].info['metadata_requirements']
+            print datasets[0].info['metadata_requirements'][ch]
             try:
                 _image_description += datasets[0].info['metadata_requirements'][ch]['alias']
             except KeyError:
@@ -232,17 +231,28 @@ class MITIFFWriter(ImageWriter):
         _image_description += '\n'
        
         _image_description += ' Xsize: '
-        _image_description += str(dataset.shape[0]) + '\n'
+        _image_description += str(dataset.shape[2]) + '\n'
     
         _image_description += ' Ysize: '
-        _image_description += str(dataset.shape[0]) + '\n'
+        _image_description += str(dataset.shape[1]) + '\n'
     
         _image_description += ' Map projection: Stereographic\n'
-        _image_description += ' Proj string: ' + datasets[0].info['area'].proj4_string
-        if not all( datum in datasets[0].info['area'].proj4_string for datum in ['datum','towgs84']):
+        print datasets[0].info['area'].proj_dict
+        proj4_string = datasets[0].info['area'].proj4_string
+        if 'geos' in proj4_string:
+            proj4_string = proj4_string.replace("+sweep=x ","")
+            if '+a=6378137.0 +b=6356752.31414' in proj4_string:
+                proj4_string = proj4_string.replace("+a=6378137.0 +b=6356752.31414","+ellps=WGS84")
+            #if '+h=35786023.0' in proj4_string:
+            #    proj4_string = proj4_string.replace("+h=35786023.0 ","")
+            if '+units=m' in proj4_string:
+                proj4_string = proj4_string.replace("+units=m","+units=km")
+                
+        _image_description += ' Proj string: ' + proj4_string
+        if not all( datum in proj4_string for datum in ['datum','towgs84']):
             _image_description += ' +towgs84=0,0,0'
 
-        if not 'units' in datasets[0].info['area'].proj4_string:
+        if not 'units' in proj4_string:
             _image_description += ' +units=km'
         
         #Need to use center of lower left pixel. Subtract half a pixel size
@@ -270,7 +280,8 @@ class MITIFFWriter(ImageWriter):
     
         LOG.debug("Area extent: {}".format(datasets[0].info['area'].area_extent))
 
-        for ch in datasets[0].info['prerequisites']:
+        #for ch in datasets[0].info['prerequisites']:
+        for ch in channels:
             found_channel = False
             print ch
                     
@@ -322,26 +333,6 @@ class MITIFFWriter(ImageWriter):
                 _image_description += ']\n\n'
                     
         return _image_description
-
-    def _generate_filename(self, datasets, **kwargs):
-        """Generate filename for the mitiff file
-           I think this need a config input like a trollsift config or something
-        """
-        from trollsift.parser import compose
-        filename = None
-        if type(kwargs["sensor"]) not in (tuple, list, set):
-            kwargs["sensor"] = [kwargs["sensor"]]
-
-        _info = datasets[0].info
-        _info.update({'area_id':datasets[0].info['area'].area_id})
-        try:
-            #filename = os.path.join(kwargs['output_dir'], compose(self.config[kwargs['sensor'][0]][0]['file-name'],datasets[0].info))
-            filename = os.path.join(kwargs['output_dir'], compose(self.config[kwargs['sensor'][0]][0]['file-name'],_info))
-        except:
-            LOG.error("Failed to compose filename for sensor: {} with config: {} and output_dir: {}".format(kwargs['sensor'][0],self.config[kwargs['sensor'][0]][0]['file-name'], kwargs['output_dir']))
-            raise
-
-        return filename
 
     def _save_datasets_as_mitiff(self, datasets, image_description, gen_filename, **kwargs):
         """Put all togehter and save as a tiff file with the special tag making it a 
