@@ -2,6 +2,311 @@ Changelog
 =========
 
 
+v0.7.7 (2017-12-21)
+-------------------
+- Update changelog. [davidh-ssec]
+- Bump version: 0.7.6 → 0.7.7. [davidh-ssec]
+- Merge pull request #140 from pytroll/bugfix-scmi-signed. [David Hoese]
+
+  Bugfix scmi signed integer data variables
+- Add ipython tab completion for scene keys. [davidh-ssec]
+- Fix SCMI writer because AWIPS doesn't like unsigned integers. [davidh-
+  ssec]
+
+  Using the entire 16-bit unsigned integer space displays fine in AWIPS
+  but it doesn't handle them correctly when adding derived parameters.
+  Meaning once the data goes in to a python script and gets converted to
+  a signed interger...yeah. This change makes it so data is a signed
+  16-bit integer that only uses the positive half of the bit space.
+
+- Merge pull request #138 from pytroll/bugfix-modis-reader. [David
+  Hoese]
+- Add more file patterns to hdfeos_l1b reader. [davidh-ssec]
+- Fix requesting a specific resolution from a reader. [davidh-ssec]
+- Merge remote-tracking branch 'origin/fix-resolution' into bugfix-
+  modis-reader. [davidh-ssec]
+- Allow providing resolution when loading a composite. [Martin Raspaud]
+- Fix hdfeos_l1b reader not knowing what resolution of datasets it had.
+  [davidh-ssec]
+- Fix interpolation problem at 250m resolution. [Martin Raspaud]
+- Fix readers not returning the highest resolution dataset IDs. [davidh-
+  ssec]
+- Merge pull request #139 from pytroll/bugfix-viirs-l1b. [David Hoese]
+
+  Fix VIIRS L1B to work with JPSS-1 and new NASA filenames
+- Fix VIIRS L1B to work with JPSS-1 and new NASA filenames. [davidh-
+  ssec]
+- Clean up style. [Martin Raspaud]
+- Fix lon/lat caching in hdfeos_l1b for different resolutions. [Martin
+  Raspaud]
+
+  Fixes #132
+- Merge pull request #137 from pytroll/logging_corrupted_file. [Martin
+  Raspaud]
+
+  When opening/reading a nc or hdf file fails, be verbose telling which file it is that fails
+- When opening/reading a file fails, be verbose telling which file it is
+  that fails. [Adam.Dybbroe]
+- Merge pull request #134 from howff/hdfeos_l1b_ipopp_filenames. [Martin
+  Raspaud]
+
+  Added IPOPP-style MODIS-L1b filenames
+- Update doc re. IMAPP and IPOPP. [Andrew Brooks]
+- Added IPOPP-style MODIS-L1b filenames. [Andrew Brooks]
+
+
+v0.7.6 (2017-12-19)
+-------------------
+- Update changelog. [Martin Raspaud]
+- Bump version: 0.7.5 → 0.7.6. [Martin Raspaud]
+- Merge pull request #135 from pytroll/viirs_truecolor_config_error.
+  [Martin Raspaud]
+
+  Replace effective_solar_pathlength_corrected with the standard sunz-corrected
+- Replace effective_solar_pathlength_corrected witn the standard sunz-
+  correction. VIIRS data are already sun-zenith corrected.
+  [Adam.Dybbroe]
+- Update documentation to add hrit_goes. [Martin Raspaud]
+- Fix GOES navigation. [Martin Raspaud]
+- Finalize GOES LRIT reader. [Martin Raspaud]
+- Merge pull request #39 from howff/develop. [Martin Raspaud]
+
+  Reader for GOES HRIT, WIP
+- Fix available_composite_names in doc. [Andrew Brooks]
+- Merge branch 'develop' of https://github.com/pytroll/satpy into
+  develop. [Andrew Brooks]
+- Start of reader for GOES HRIT. [howff]
+- Update PULL_REQUEST_TEMPLATE.md. [Martin Raspaud]
+
+  This hides the comments when the PR is previewed and reminds user to provide a description for the PR.
+- Merge pull request #122 from eysteinn/scatsat1. [Martin Raspaud]
+
+  Add reader for ScatSat1 Level 2B wind speed data, HDF5 format
+- Read end_time info correctly. [Eysteinn]
+- Add reader for ScatSat1 Level 2B wind speed data. [Eysteinn]
+- Merge pull request #129 from pytroll/viirs_rgbs. [Martin Raspaud]
+
+  Use the Pyspectral atm correction as the default.
+- Use the Pyspectral atm correction as the default. Add a high-res
+  overview RGB, use the hncc-dnb in the night-microphysics and use the
+  effective_solar_pathlength_corrected for all true color RGBs.
+  [Adam.Dybbroe]
+- Merge pull request #128 from pytroll/atm_corrections. [Martin Raspaud]
+
+  Atm corrections
+- Pep8 cosmetics. [Adam.Dybbroe]
+- Pep8 cosmetics. [Adam.Dybbroe]
+- Pep8 editorial, and fixing copyright. [Adam.Dybbroe]
+- Add some pre-defined atm/rayleigh corrections to appply over land and
+  sea. [Adam.Dybbroe]
+- Merge pull request #131 from pytroll/bugfix-hrit-jma. [Martin Raspaud]
+
+  Bugfix hrit_jma
+- Bugfix hrit_jma. [Martin Raspaud]
+- Use a more appropriate and shorter link to the MSG native format pdf
+  doc. [Adam.Dybbroe]
+- Merge pull request #126 from pytroll/feature_ahi_stretch. [Martin
+  Raspaud]
+
+  Improvemements to AHI True color imagery
+- Use marine_clean and us-standard for atm correction, and improve
+  stretch at low sun elevation. [Adam.Dybbroe]
+- Use the CIRA stretch for True color imagery. [Adam.Dybbroe]
+
+
+v0.7.5 (2017-12-11)
+-------------------
+- Update changelog. [davidh-ssec]
+- Bump version: 0.7.4 → 0.7.5. [davidh-ssec]
+- Remove unused legacy .cfg files. [davidh-ssec]
+- Merge branch 'master' into develop. [davidh-ssec]
+- Merge pull request #118 from mitkin/master. [Martin Raspaud]
+
+  Add file pattern for MODIS L1B from LAADS WEB
+- Add file pattern for MODIS L1B from LAADS WEB. [Mikhail Itkin]
+
+  NASA's LAADS WEB pattern is slightly different
+
+- Remove old and unused mipp_xrit reader. [davidh-ssec]
+- Fix SCMI writer not overwriting data from previous tiles. [davidh-
+  ssec]
+- Merge pull request #121 from pytroll/fix-ir-modifiers. [Martin
+  Raspaud]
+
+  Remove VIIRS SDR IR modifiers
+- Remove sun zenith angle correction from IR channels. [Panu Lahtinen]
+- Add github templates for issues and PRs. [Martin Raspaud]
+- Bugfix epsl1b reader. [Martin Raspaud]
+- Merge pull request #107 from pytroll/fix-nwcsaf-proj4. [David Hoese]
+
+  Convert NWC SAF MSG projection string to meters
+- Merge branch 'fix-nwcsaf-proj4' of https://github.com/pytroll/satpy
+  into fix-nwcsaf-proj4. [Panu Lahtinen]
+- Merge branch 'fix-nwcsaf-proj4' of https://github.com/pytroll/satpy
+  into fix-nwcsaf-proj4. [Panu Lahtinen]
+- Read attributes "flag_meanings", "flag_values" and "long_name" [Panu
+  Lahtinen]
+- Configure more datasets. [Panu Lahtinen]
+- Fix also area extents. [Panu Lahtinen]
+- Add unit tests for utils.proj_units_to_meters() [Panu Lahtinen]
+- Move proj_units_to_meters() to satpy.utils. [Panu Lahtinen]
+- Convert projection parameters from kilometers to meters. [Panu
+  Lahtinen]
+- Read attributes "flag_meanings", "flag_values" and "long_name" [Panu
+  Lahtinen]
+- Configure more datasets. [Panu Lahtinen]
+- Fix also area extents. [Panu Lahtinen]
+- Add unit tests for utils.proj_units_to_meters() [Panu Lahtinen]
+- Move proj_units_to_meters() to satpy.utils. [Panu Lahtinen]
+- Convert projection parameters from kilometers to meters. [Panu
+  Lahtinen]
+- Move proj_units_to_meters() to satpy.utils. [Panu Lahtinen]
+- Convert projection parameters from kilometers to meters. [Panu
+  Lahtinen]
+- Read attributes "flag_meanings", "flag_values" and "long_name" [Panu
+  Lahtinen]
+- Configure more datasets. [Panu Lahtinen]
+- Fix also area extents. [Panu Lahtinen]
+- Add unit tests for utils.proj_units_to_meters() [Panu Lahtinen]
+- Move proj_units_to_meters() to satpy.utils. [Panu Lahtinen]
+- Convert projection parameters from kilometers to meters. [Panu
+  Lahtinen]
+- Merge pull request #111 from eysteinn/sentinel1-reproject. [David
+  Hoese]
+
+  Fixed area information to safe_sar_c reader to allow for resampling
+- Added coordinates to sar_c.yaml to allow for reprojection. [Eysteinn]
+- Merge pull request #108 from TAlonglong/feature-decorate. [Martin
+  Raspaud]
+
+  Feature decorate
+- __init__.py docstring in a few add pydecorate features. [Trygve
+  Aspenes]
+- Satpy/writers/__init__.py implement more general way of handling
+  pydecorate calls from satpy save_dataset. Instead of logo and text
+  separate, use decorate. This needs to be a list to keep the order of
+  alignment available in pydecorate. Since the argument to add_decorate
+  needs to be a mapping it may look like this:
+  decorate={'decorate':[{'logo':{...}},{'text':{...}},...]} [Trygve
+  Aspenes]
+- Merge branch 'develop' into develop-fork. [Trygve Aspenes]
+- Satpy/writers/__init__.py added add_text function. This is meant to be
+  used when calling save_dataset to add text to an image using
+  pydecorate. eg save_dataset(...., text_overlay={'text': 'THIS IS THE
+  TEXT TO BE ADDED', 'align':{'top_bottom':'bottom',
+  'left_right':'right'},
+  'font':'/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
+  'font_size':25, 'height':30, 'bg':'black', 'bg_opacity':255,
+  'line':'white'}). Not all options available as style in pydecorate are
+  implemented. This is left TODO. This PR is dependent on
+  https://github.com/pytroll/pydecorate/pull/3 to be completed. [Trygve
+  Aspenes]
+- Adding to more options to add_overlay. This to better control which
+  levels of coast(GSHHS) and borders (WDB_II) are put on the plot.
+  [Trygve Aspenes]
+- Merge pull request #88 from pytroll/feature-3d-enhancement. [Panu
+  Lahtinen]
+
+  Add 3D enhancement, fix BWCompositor
+- Merge branch 'feature-3d-enhancement' of
+  https://github.com/pytroll/satpy into feature-3d-enhancement. [Panu
+  Lahtinen]
+- Add example of composite with 3D effect. [Panu Lahtinen]
+- Fix BWCompositor to handle info correctly. [Panu Lahtinen]
+- Add 3D effect enhancement. [Panu Lahtinen]
+- Remove rebase comments. [Panu Lahtinen]
+- Add example of composite with 3D effect. [Panu Lahtinen]
+- Fix BWCompositor to handle info correctly. [Panu Lahtinen]
+- Add 3D effect enhancement. [Panu Lahtinen]
+- Merge pull request #87 from pytroll/feature-IASI-L2-reader. [Panu
+  Lahtinen]
+
+  Add IASI L2 reader
+- Merge branch 'feature-IASI-L2-reader' of
+  https://github.com/pytroll/satpy into feature-IASI-L2-reader. [Panu
+  Lahtinen]
+- Merge branch 'feature-IASI-L2-reader' of
+  https://github.com/pytroll/satpy into feature-IASI-L2-reader. [Panu
+  Lahtinen]
+- Fix unit of time. [Panu Lahtinen]
+- Remove un-needed '' from the reader init line. [Panu Lahtinen]
+- Merge branch 'develop' into feature-IASI-L2-reader. [Panu Lahtinen]
+- Add mapping from M03 to Metop-C. [Panu Lahtinen]
+- Add subsatellite resolution to datasets. [Panu Lahtinen]
+- Fix typos, make read_dataset() and read_geo() functions instead of
+  methods. [Panu Lahtinen]
+- Add initial version of IASI L2 reader. [Panu Lahtinen]
+- Fix unit of time. [Panu Lahtinen]
+- Remove un-needed '' from the reader init line. [Panu Lahtinen]
+- Add mapping from M03 to Metop-C. [Panu Lahtinen]
+- Add subsatellite resolution to datasets. [Panu Lahtinen]
+- Fix typos, make read_dataset() and read_geo() functions instead of
+  methods. [Panu Lahtinen]
+- Add initial version of IASI L2 reader. [Panu Lahtinen]
+- Fix unit of time. [Panu Lahtinen]
+- Remove un-needed '' from the reader init line. [Panu Lahtinen]
+- Add mapping from M03 to Metop-C. [Panu Lahtinen]
+- Add subsatellite resolution to datasets. [Panu Lahtinen]
+- Fix typos, make read_dataset() and read_geo() functions instead of
+  methods. [Panu Lahtinen]
+- Add initial version of IASI L2 reader. [Panu Lahtinen]
+- Merge pull request #96 from eysteinn/create_colormap. [David Hoese]
+
+  Create colormap
+- Make colorizing/palettizing more flexible. [Eysteinn]
+- Merge pull request #4 from pytroll/develop. [Eysteinn Sigurðsson]
+
+  Develop
+- Merge pull request #3 from pytroll/develop. [Eysteinn Sigurðsson]
+
+  Develop
+- Merge pull request #109 from pytroll/bugfix-scmi. [David Hoese]
+
+  Fix SCMI writer and add more tiled grids
+- Fix SCMI writer writing masked geolocation to netcdf files. [davidh-
+  ssec]
+- Add additional GOES SCMI grids. [davidh-ssec]
+- Allow adding overlay for L and LA images. [Martin Raspaud]
+- Merge pull request #101 from pytroll/bugfix-scmi3. [David Hoese]
+
+  Fix python 3 compatibility in scmi writer
+- Add more SCMI writer tests for expected failures. [davidh-ssec]
+- Fix python 3 compatibility in scmi writer. [davidh-ssec]
+
+  Includes fix for X/Y coordinate precision which affects GOES-16 data
+
+- Merge pull request #105 from howff/doc-fix. [Martin Raspaud]
+
+  fix available_composite_names in doc
+- Fix available_composite_names in doc. [Andrew Brooks]
+
+
+v0.7.4 (2017-11-13)
+-------------------
+- Update changelog. [davidh-ssec]
+- Bump version: 0.7.3 → 0.7.4. [davidh-ssec]
+- Update changelog. [davidh-ssec]
+- Fix physical_element for VIIRS M07 in SCMI writer. [davidh-ssec]
+- Merge pull request #97 from pytroll/feature-optimize-scmi. [David
+  Hoese]
+
+  Optimize SCMI writer to reuse results of tile calculations
+- Fix area id in SCMI writer to be more specific. [davidh-ssec]
+- Optimize SCMI writer to reuse results of tile calculations. [davidh-
+  ssec]
+
+  It uses a little bit more memory, but speeds up the processing by quite
+  a bit when tested under the Polar2Grid equivalent.
+
+- Fix floating point saving for geotiff. [Martin Raspaud]
+- Merge pull request #93 from pytroll/bugfix-user-enhancements. [David
+  Hoese]
+
+  Fix enhancement config loading when user configs are present
+- Fix enhancement config loading when user configs are present. [davidh-
+  ssec]
+
+
 v0.7.3 (2017-10-24)
 -------------------
 - Update changelog. [davidh-ssec]
