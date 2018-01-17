@@ -330,6 +330,7 @@ class Scene(InfoObject):
         # Sort requested datasets by reader
         reader_datasets = {}
 
+        print "dataset_nodes: ",dataset_nodes
         for node in dataset_nodes:
             ds_id = node.name
             if ds_id in self.datasets and self.datasets[ds_id].is_loaded():

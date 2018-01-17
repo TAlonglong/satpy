@@ -32,6 +32,11 @@ import numpy as np
 from satpy.utils import ensure_dir
 from satpy.writers import ImageWriter
 
+from satpy.config import get_environ_config_dir
+from satpy.composites import CompositorLoader
+
+#(config_search_paths, runtime_import, recursive_dict_update)
+
 import os
 from TiffImagePlugin import IMAGEDESCRIPTION
 #from TiffImagePlugin import COMPRESSION
@@ -65,6 +70,7 @@ class MITIFFWriter(ImageWriter):
         """
         LOG.debug("Starting in save_datasetsssssssssssssssss ... ")
         LOG.debug("kwargs: {}".format(kwargs))
+
         try:
             if type(kwargs["sensor"]) not in (tuple, list, set):
                 kwargs['sensor'] = kwargs['sensor'].replace("/","-")
@@ -83,7 +89,8 @@ class MITIFFWriter(ImageWriter):
             #kwargs['name']  ="shallalal"
             kwargs['start_time'] = datasets[0].info['start_time']
             print kwargs
-            print self.get_filename(**kwargs)
+            LOG.info("Saving mitiff to: {} ...".format(self.get_filename(**kwargs)))
+            print "Saving mitiff to: {} ...".format(self.get_filename(**kwargs))
             gen_filename = self.get_filename(**kwargs)
             self._save_datasets_as_mitiff(datasets, image_description, gen_filename, **kwargs)
         except:
@@ -185,7 +192,8 @@ class MITIFFWriter(ImageWriter):
                 if dataset.info['start_time'] < earliest:
                     earliest = datset.info['start_time']
             first=False
-        print earliest
+        print "earliest: ",earliest
+        print "---------------------------------------------------------------------------"
         _image_description += earliest.strftime("%H:%M %d/%m-%Y\n")
        
         _image_description += ' SatDir: 0\n'
@@ -195,11 +203,13 @@ class MITIFFWriter(ImageWriter):
             kwargs["sensor"] = [kwargs["sensor"]]
 
         print "datasets in make_image_desc: {}".format(datasets)
+        print "---------------------------------------------------------------------------"
 
         if 'prerequisites' in datasets[0].info:
             _image_description += str(len(datasets[0].info['prerequisites']))
         else:
             print "len datasets: {}".format(len(datasets))
+            print "---------------------------------------------------------------------------"
             _image_description += str(len(datasets))
 
         _image_description += ' In this file: '
@@ -211,6 +221,7 @@ class MITIFFWriter(ImageWriter):
             channels = datasets[0].info['prerequisites']
         else:
             print datasets[0].info['name']
+            print "---------------------------------------------------------------------------"
             for ch in xrange(len(datasets)):
                 channels.append(datasets[ch].info['name'])
 
