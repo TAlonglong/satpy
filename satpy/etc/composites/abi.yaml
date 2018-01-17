@@ -84,23 +84,29 @@ composites:
   datasets:
     compositor: !!python/name:satpy.composites.DatasetsCompositor
     prerequisites:
+    - C01
     - C02
     - C03
-#    - C04
-#    - C05
-#    - C06
-#    - C07
-#    - C08
-#    - C09
-#    - C10
-#    - C11
-#    - C12
-#    - C13
+    - C04
+    - C05
+    - C06
+    - C07
+    - C08
+    - C09
+    - C10
+    - C11
+    - C12
+    - C13
     - C14
-#    - C15
-#    - C16
+    - C15
+    - C16
     standard_name: datasets
     metadata_requirements:
+      C01:
+        alias: C01
+        calibration: reflectance
+        min-val: 0
+        max-val: 100
       C02:
         alias: C02
         calibration: reflectance
@@ -111,8 +117,68 @@ composites:
         calibration: reflectance
         min-val: 0
         max-val: 100
+      C04:
+        alias: C04
+        calibration: reflectance
+        min-val: 0
+        max-val: 100
+      C05:
+        alias: C05
+        calibration: reflectance
+        min-val: 0
+        max-val: 100
+      C06:
+        alias: C06
+        calibration: reflectance
+        min-val: 0
+        max-val: 100
+      C07:
+        alias: C07
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C08:
+        alias: C08
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C09:
+        alias: C09
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C10:
+        alias: C10
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C11:
+        alias: C11
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C12:
+        alias: C12
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C13:
+        alias: C13
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
       C14:
         alias: C14
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C15:
+        alias: C16
+        calibration: brightness_temperature
+        min-val: -152
+        max-val: 92
+      C16:
+        alias: C16
         calibration: brightness_temperature
         min-val: -152
         max-val: 92
