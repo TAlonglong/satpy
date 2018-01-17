@@ -841,15 +841,15 @@ class DatasetsCompositor(CompositeBase):
     def __call__(self, projectables, nonprojectables=None, **info):
 
         try:
-            #first = True
-            #prev_area_extent = None
-            #for projectable in projectables:
-            #    print "projectable: {}".format(projectable.info['area'].area_extent)
-            #    if not first:
-            #        print "Compare area extent"
-            #        projectable.info['area'].area_extent = prev_area_extent
-            #    prev_area_extent = projectable.info['area'].area_extent
-            #    first = False
+            first = True
+            prev_area_extent = None
+            for projectable in projectables:
+                print "projectable: {}".format(projectable.info['area'].area_extent)
+                if not first:
+                    print "Compare area extent"
+                    projectable.info['area'].area_extent = prev_area_extent
+                prev_area_extent = projectable.info['area'].area_extent
+                first = False
 
             the_data = np.rollaxis(
                 np.ma.dstack([projectable for projectable in projectables]),
@@ -883,6 +883,7 @@ class DatasetsCompositor(CompositeBase):
             sensor = list(sensor)[0]
         info["sensor"] = sensor
         info["mode"] = "Datasets"
+        print "End DatasetsCompositor"
         return Dataset(data=the_data, **info)
 
 
