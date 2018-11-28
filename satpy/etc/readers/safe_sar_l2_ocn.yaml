@@ -29,6 +29,10 @@ datasets:
     wavelength: [5.400, 5.405, 5.410]
     file_type: safe_measurement
     coordinates: [owiLon, owiLat]
+    calibration:
+      windspeed:
+        standard_name: windspeed
+        units: m s-1
 
   owiWindDirection:
     name: owiWindDirection
@@ -36,3 +40,4 @@ datasets:
     wavelength: [5.400, 5.405, 5.410]
     file_type: safe_measurement
     coordinates: [owiLon, owiLat]
+    units: degree
