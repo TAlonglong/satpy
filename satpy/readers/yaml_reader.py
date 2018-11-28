@@ -332,6 +332,9 @@ class FileYAMLReader(AbstractYAMLReader):
                 for fhd in self.file_handlers[requirement]:
                     # FIXME: Isn't this super wasteful? filename_info.items()
                     # every iteration?
+                    # NOTE: If a dataset has one or more requirements and the
+                    # requirements does not match the tags the requesting dataset
+                    # this will fail to work
                     if (all(item in filename_info.items()
                             for item in fhd.filename_info.items())):
                         req_fh.append(fhd)
