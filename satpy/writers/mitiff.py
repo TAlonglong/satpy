@@ -173,8 +173,12 @@ class MITIFFWriter(ImageWriter):
                                 ds.attrs['prerequisites'][ch][0])
                             break
             else:
-                for ch, ds in enumerate(datasets):
-                    channels.append(ch + 1)
+                if isinstance(datasets, xr.core.dataarray.DataArray):
+                    LOG.debug("len datasets: xarray 1", )
+                    channels.append(1)
+                else:
+                    for ch, ds in enumerate(datasets):
+                        channels.append(ch + 1)
         except KeyError:
             for ch, ds in enumerate(datasets):
                 channels.append(ch + 1)
@@ -197,13 +201,9 @@ class MITIFFWriter(ImageWriter):
         return _image_description
 
     def _add_sizes(self, datasets, first_dataset):
-        print "datasets.sizes: ", datasets.sizes
-        print type(datasets.sizes)
         _image_description = ' Xsize: '
         if isinstance(datasets, list):
             _image_description += str(first_dataset.sizes['x']) + '\n'
-        elif isinstance(datasets, dict):
-            print "DICT?"
         else:
             _image_description += str(datasets.sizes['x']) + '\n'
 
@@ -327,39 +327,44 @@ class MITIFFWriter(ImageWriter):
         _table_calibration = ""
         found_calibration = False
         skip_calibration = False
-        for i, ds in enumerate(datasets):
-            if 'prerequisites' in ds.attrs and isinstance(ds.attrs['prerequisites'][i], DatasetID):
-                if ds.attrs['prerequisites'][i][0] == ch:
-                    if ds.attrs['prerequisites'][i][4] == 'RADIANCE':
-                        raise NotImplementedError(
-                            "Mitiff radiance calibration not implemented.")
-                    # _table_calibration += ', Radiance, '
-                    # _table_calibration += '[W/m²/µm/sr]'
-                    # _decimals = 8
-                    elif ds.attrs['prerequisites'][i][4] == 'brightness_temperature':
-                        found_calibration = True
-                        _table_calibration += ', BT, '
-                        _table_calibration += u'\u00B0'  # '\u2103'
-                        _table_calibration += u'[C]'
+        if isinstance(datasets, xr.core.dataarray.DataArray):
+            if 'prerequisites' in datasets.attrs and isinstance(datasets.attrs['prerequisites'][0], DatasetID):
+                if datasets.attrs['prerequisites'][0][4] == 'windspeed':
+                    found_calibration = True
+                    _table_calibration += ', WindSpeed, '
+                    _table_calibration += '[m/s]'
+                    _decimals = 1
+        else:
+            for i, ds in enumerate(datasets):
+                if 'prerequisites' in ds.attrs and isinstance(ds.attrs['prerequisites'][i], DatasetID):
+                    if ds.attrs['prerequisites'][i][0] == ch:
+                        if ds.attrs['prerequisites'][i][4] == 'RADIANCE':
+                            raise NotImplementedError(
+                                "Mitiff radiance calibration not implemented.")
+                        elif ds.attrs['prerequisites'][i][4] == 'brightness_temperature':
+                            found_calibration = True
+                            _table_calibration += ', BT, '
+                            _table_calibration += u'\u00B0'  # '\u2103'
+                            _table_calibration += u'[C]'
 
-                        _reverse_offset = 255.
-                        _reverse_scale = -1.
-                        _decimals = 2
-                    elif ds.attrs['prerequisites'][i][4] == 'reflectance':
-                        found_calibration = True
-                        _table_calibration += ', Reflectance(Albedo), '
-                        _table_calibration += '[%]'
-                        _decimals = 2
+                            _reverse_offset = 255.
+                            _reverse_scale = -1.
+                            _decimals = 2
+                        elif ds.attrs['prerequisites'][i][4] == 'reflectance':
+                            found_calibration = True
+                            _table_calibration += ', Reflectance(Albedo), '
+                            _table_calibration += '[%]'
+                            _decimals = 2
+                        else:
+                            LOG.warning("Unknown calib type. Must be Radiance, Reflectance or BT.")
+
+                            break
                     else:
-                        LOG.warning("Unknown calib type. Must be Radiance, Reflectance or BT.")
-
-                        break
+                        continue
                 else:
-                    continue
-            else:
-                _table_calibration = ""
-                skip_calibration = True
-                break
+                    _table_calibration = ""
+                    skip_calibration = True
+                    break
         if not found_calibration:
             _table_calibration = ""
             skip_calibration = True
@@ -509,8 +514,6 @@ class MITIFFWriter(ImageWriter):
 
         _image_description += ' Channels: '
 
-        print "dataset: ", datasets
-        print "type dataset: ", type(datasets)
         if isinstance(datasets, list):
             LOG.debug("len datasets: %s", len(datasets))
             _image_description += str(len(datasets))
@@ -599,27 +602,44 @@ class MITIFFWriter(ImageWriter):
         elif 'dataset' in datasets.attrs['name']:
             LOG.debug("Saving %s as a dataset.", datasets.attrs['name'])
             for _cn in self.channel_order[kwargs['sensor']]:
-                for i, band in enumerate(datasets['bands']):
-                    if band == _cn:
-                        chn = datasets.sel(bands=band)
-                        reverse_offset = 0.
-                        reverse_scale = 1.
-                        if chn.attrs['prerequisites'][i][4] == 'brightness_temperature':
-                            reverse_offset = 255.
-                            reverse_scale = -1.
-                            chn.data += KELVIN_TO_CELSIUS
+                # Special case where only one channels is used and need calibration
+                if isinstance(datasets, xr.core.dataarray.DataArray):
+                    chn = datasets
+                    reverse_offset = 0.
+                    reverse_scale = 1.
 
-                        # Need to possible translate channels names from satpy to mitiff
-                        cn = cns.get(chn.attrs['prerequisites'][i][0],
-                                     chn.attrs['prerequisites'][i][0])
-                        _data = reverse_offset + reverse_scale * (((chn.data - float(self.mitiff_config[
+                    # Need to possible translate channels names from satpy to mitiff
+                    cn = cns.get(chn.attrs['prerequisites'][0][0],
+                                 chn.attrs['prerequisites'][0][0])
+                    _data = reverse_offset + reverse_scale * (((chn.data - float(self.mitiff_config[
                             kwargs['sensor']][cn]['min-val'])) /
                             (float(self.mitiff_config[kwargs['sensor']][cn]['max-val']) -
                              float(self.mitiff_config[kwargs['sensor']][cn]['min-val']))) * 255.)
-                        data = _data.clip(0, 255)
+                    data = _data.clip(0, 255)
 
-                        tif.write_image(data.astype(np.uint8), compression='deflate')
-                        break
+                    tif.write_image(data.astype(np.uint8), compression='deflate')
+                else:
+                    for i, band in enumerate(datasets['bands']):
+                        if band == _cn:
+                            chn = datasets.sel(bands=band)
+                            reverse_offset = 0.
+                            reverse_scale = 1.
+                            if chn.attrs['prerequisites'][i][4] == 'brightness_temperature':
+                                reverse_offset = 255.
+                                reverse_scale = -1.
+                                chn.data += KELVIN_TO_CELSIUS
+
+                            # Need to possible translate channels names from satpy to mitiff
+                            cn = cns.get(chn.attrs['prerequisites'][i][0],
+                                         chn.attrs['prerequisites'][i][0])
+                            _data = reverse_offset + reverse_scale * (((chn.data - float(self.mitiff_config[
+                                kwargs['sensor']][cn]['min-val'])) /
+                                (float(self.mitiff_config[kwargs['sensor']][cn]['max-val']) -
+                                 float(self.mitiff_config[kwargs['sensor']][cn]['min-val']))) * 255.)
+                            data = _data.clip(0, 255)
+
+                            tif.write_image(data.astype(np.uint8), compression='deflate')
+                            break
 
         else:
             LOG.debug("Saving datasets as enhanced image")
