@@ -24,6 +24,7 @@
 import logging
 import os
 import xml.etree.ElementTree as ET
+from pyresample import geometry
 
 from satpy.readers.file_handlers import BaseFileHandler
 from satpy import CHUNK_SIZE
@@ -64,9 +65,7 @@ class SAFEXML(BaseFileHandler):
         print 'SAFEXML init'
         super(SAFEXML, self).__init__(filename, filename_info, filetype_info)
 
-        #self._start_time = filename_info['fstart_time']
-        #self._end_time = filename_info['fend_time']
-        #self._polarization = filename_info['fpolarization']
+
         self.root = ET.parse(self.filename)
         #rt = self.root.getroot()
         #for coordinates in rt.findall('gml:coordinates'):
@@ -100,14 +99,14 @@ class SAFEXML(BaseFileHandler):
 class SAFENC(BaseFileHandler):
     """Measurement file reader."""
 
-    def __init__(self, filename, filename_info, filetype_info, manifest_fh):
+    def __init__(self, filename, filename_info, filetype_info):
         print "INIT SAFENC"
         super(SAFENC, self).__init__(filename, filename_info,
                                       filetype_info)
 
-        self.mainfest = manifest_fh
-        print "manifest_fh ", manifest_fh
-        self.manifest.get_metadata()
+        #self.manifest = manifest_fh
+        #print "manifest_fh ", manifest_fh
+        #self.manifest.get_metadata()
 
         self._start_time = filename_info['start_time']
         self._end_time = filename_info['end_time']
@@ -124,8 +123,8 @@ class SAFENC(BaseFileHandler):
                                   mask_and_scale=False,
                                   chunks={'owiAzSize': CHUNK_SIZE,
                                           'owiRaSize': CHUNK_SIZE})
-        self.nc = self.nc.rename({'owiAzSize': 'x'})
-        self.nc = self.nc.rename({'owiRaSize': 'y'})
+        self.nc = self.nc.rename({'owiAzSize': 'y'})
+        self.nc = self.nc.rename({'owiRaSize': 'x'})
         print self.nc
         print self.nc['owiWindDirection']
         self.filename = filename
@@ -145,7 +144,6 @@ class SAFENC(BaseFileHandler):
             if self.lons is None or self.lats is None:
                 self.lons = self.nc['owiLon']
                 self.lats = self.nc['owiLat']
-
             if key.name == 'owiLat':
                 res = self.lats
             else:
@@ -182,27 +180,58 @@ class SAFENC(BaseFileHandler):
     def end_time(self):
         return self._end_time
 
-    def get_area_def(self, ds_id):
-        data = self[ds_id.name]
+#    def get_area_def(self, ds_id):
+        #print 'ds_id: ',ds_id
+        #print 'ds_id.name: ',ds_id.name
 
-        proj_dict = {
-            'proj': 'latlong',
-            'datum': 'WGS84',
-            'ellps': 'WGS84',
-            'no_defs': True
-        }
+        #data = self[ds_id.name]
 
-        area_extent = [data.attrs.get('ProjectionMinLongitude'), data.attrs.get('ProjectionMinLatitude'),
-                       data.attrs.get('ProjectionMaxLongitude'), data.attrs.get('ProjectionMaxLatitude')]
+#        proj_dict = {#'init': 'epsg:4326'}
+#            'proj': 'eqc',
+#            'datum': 'WGS84',
+#            'ellps': 'WGS84',
+#            'no_defs': True
+#        }
 
-        area = geometry.AreaDefinition(
-            'sar_ocn_area',
-            'name_of_proj',
-            'id_of_proj',
-            proj_dict,
-            int(self.filename_info['dim0']),
-            int(self.filename_info['dim1']),
-            np.asarray(area_extent)
-        )
+#        from pyproj import Proj, transform
+#        inProj = Proj(init='epsg:4326')
+#        outProj = Proj('+proj=eqc +datum=WGS84 +ellps=WGS84')
+#        lon_ll, lat_ll = 2.300587, 66.669945 # 8.146225, 66.177345 # 2.300587, 66.669945
+#        x_ll, y_ll = transform(inProj, outProj, lon_ll, lat_ll)
+#        print x_ll, y_ll
+#        lon_ur, lat_ur = 9.148409, 67.643173 # 2.944688, 68.154190 # 9.148409, 67.643173
+#        x_ur, y_ur = transform(inProj, outProj, lon_ur, lat_ur)
+#        print x_ur, y_ur
 
-        return area
+#        res_x = (x_ur - x_ll)/166.
+#        res_y = (y_ur - y_ll)/266.
+#        print "RES: ", res_x, res_y
+        # A string of 4 lon, lat coordinate pairs which describe
+        # the corners of the image. The string is of the form:
+        # lon,lat lon,lat lon,lat lon,lat
+        # The coordinates must appear in the following order:
+        # last line first pixel, last line last pixel, first line last
+        # pixel, first line first pixel
+        # <gml:coordinates>66.177345,8.146225 66.669945,2.300587 68.154190,2.944688 67.643173,9.148409</gml:coordinates>
+
+        # area_extent: (x_ll, y_ll, x_ur, y_ur)
+        # where
+
+        # x_ll: projection x coordinate of lower left corner of lower left pixel
+        # y_ll: projection y coordinate of lower left corner of lower left pixel
+        # x_ur: projection x coordinate of upper right corner of upper right pixel
+        # y_ur: projection y coordinate of upper right corner of upper right pixel
+
+#        area_extent = (x_ll, y_ll, x_ur, y_ur)
+
+#        area = geometry.AreaDefinition(
+#            'sar_ocn_area',
+ #           'name_of_proj',
+#            'id_of_proj',
+#            proj_dict,
+#            int(266),
+#            int(166),
+#            area_extent
+#        )
+
+#        return area
