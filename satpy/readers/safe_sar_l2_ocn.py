@@ -40,7 +40,7 @@ class SAFENC(BaseFileHandler):
 
     def __init__(self, filename, filename_info, filetype_info):
         super(SAFENC, self).__init__(filename, filename_info,
-                                      filetype_info)
+                                     filetype_info)
 
         self._start_time = filename_info['start_time']
         self._end_time = filename_info['end_time']
@@ -51,7 +51,7 @@ class SAFENC(BaseFileHandler):
         self.lons = None
         self._shape = None
         self.area = None
-    
+
         self.nc = xr.open_dataset(filename,
                                   decode_cf=True,
                                   mask_and_scale=False,
@@ -60,7 +60,8 @@ class SAFENC(BaseFileHandler):
         self.nc = self.nc.rename({'owiAzSize': 'y'})
         self.nc = self.nc.rename({'owiRaSize': 'x'})
         print self.nc
-        print self.nc['owiWindDirection']
+        print "WindDirection ", self.nc['owiWindDirection']
+        print "WindSpeed ", self.nc['owiWindSpeed']
         self.filename = filename
 
     def get_dataset(self, key, info):
