@@ -632,19 +632,24 @@ class MITIFFWriter(ImageWriter):
                                   datasets.sizes['x'] * datasets.sizes['y'])
             tif.WriteDirectory()
 
-    def _save_as_enhanced(self, tif, datasets, **kwargs):
+    def _save_as_enhanced(self, rasterio_tiff, datasets, **kwargs):
         """Save datasets as an enhanced RGB image."""
         img = get_enhanced_image(datasets.squeeze(), enhance=self.enhancer)
         if 'bands' in img.data.sizes and 'bands' not in datasets.sizes:
             LOG.debug("Datasets without 'bands' become image with 'bands' due to enhancement.")
             LOG.debug("Needs to regenerate mitiff image description")
             image_description = self._make_image_description(img.data, **kwargs)
-            tif.SetField(IMAGEDESCRIPTION, (image_description).encode('utf-8'))
+            #tif.SetField(IMAGEDESCRIPTION, (image_description).encode('utf-8'))
+        count = 1
         for band in img.data['bands']:
             chn = img.data.sel(bands=band)
             data = chn.values.clip(0, 1) * 254. + 1
             data = data.clip(0, 255)
-            tif.write_image(data.astype(np.uint8), compression='deflate')
+            # tif.write_image(data.astype(np.uint8), compression='deflate')
+            # rasterio_tiff.write(data.astype(np.uint8))
+            # rasterio_tiff.update_tags(count=count)
+            rasterio_tiff.write(data.astype(np.uint8), 1)
+            count += 1
 
     def _save_datasets_as_mitiff(self, datasets, image_description,
                                  gen_filename, **kwargs):
@@ -654,11 +659,36 @@ class MITIFFWriter(ImageWriter):
 
         """
         from libtiff import TIFF
+        import rasterio
 
-        tif = TIFF.open(gen_filename, mode='wb')
+        count = 0
+        if isinstance(datasets, list):
+            LOG.debug("len datasets: %s", len(datasets))
+            count = len(datasets)
+        elif 'bands' in datasets.sizes:
+            LOG.debug("len datasets: %s", datasets.sizes['bands'])
+            count = datasets.sizes['bands']
+        elif len(datasets.sizes) == 2:
+            LOG.debug("len datasets: 1")
+            count = 1
 
-        tif.SetField(IMAGEDESCRIPTION, (image_description).encode('utf-8'))
+        # tif = TIFF.open(gen_filename, mode='wb')
+        rasterio_tiff = rasterio.open(gen_filename,
+                                      mode='w',
+                                      width=datasets[0].sizes['x'],
+                                      height=datasets[0].sizes['y'],
+                                      count=1,
+                                      dtype=np.uint8,
+                                      driver='GTiff',
+                                      compress='deflate',
+                                      zlevel=9,
+                                      photometric='minisblack',
+                                      extrasamples=1,
+                                      samples=1)
 
+        # tif.SetField(IMAGEDESCRIPTION, (image_description).encode('utf-8'))
+        rasterio_tiff.update_tags(TIFFTAG_IMAGEDESCRIPTION=image_description)
+        print("Rsterio tags", rasterio_tiff.tags())
         cns = self.translate_channel_name.get(kwargs['sensor'], {})
         if isinstance(datasets, list):
             LOG.debug("Saving datasets as list")
@@ -699,12 +729,14 @@ class MITIFFWriter(ImageWriter):
                                                         self.mitiff_config[kwargs['sensor']][cn]['min-val'],
                                                         self.mitiff_config[kwargs['sensor']][cn]['max-val'])
 
-                            tif.write_image(data.astype(np.uint8), compression='deflate')
+                            #tif.write_image(data.astype(np.uint8), compression='deflate')
+                            rasterio_tiff.write(data.astype(np.uint8))
                             break
         elif self.palette:
             LOG.debug("Saving dataset as palette.")
             self._save_as_palette(tif, datasets, **kwargs)
         else:
             LOG.debug("Saving datasets as enhanced image")
-            self._save_as_enhanced(tif, datasets, **kwargs)
-        del tif
+            self._save_as_enhanced(rasterio_tiff, datasets, **kwargs)
+        #del tif
+        rasterio_tiff.close()
